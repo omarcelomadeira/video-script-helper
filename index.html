@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Script Maker</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/tachyons@4.12.0/css/tachyons.min.css"/>
+</head>
+<body class="bg-near-white">
+    <header class="bg-green white pa3">
+        <h1 class="ma0">Script Maker</h1>
+    </header>
+
+    <main class="mw8 center pa3">
+        <!-- Form to add new scenes -->
+        <section class="bg-white pa3 br2 shadow-1 mb4">
+            <h2 class="mt0 mb3">Adicionar Nova Cena</h2>
+            <form id="addSceneForm" class="flex flex-column">
+                <div class="mb3">
+                    <label for="sceneName" class="db mb2">Nome da Cena:</label>
+                    <input type="text" id="sceneName" class="w-100 pa2 br2 ba" required>
+                </div>
+                <div class="mb3">
+                    <label for="sceneText" class="db mb2">Texto da Cena:</label>
+                    <textarea id="sceneText" class="w-100 pa2 br2 ba" rows="4" required></textarea>
+                </div>
+                <div class="mb3">
+                    <label class="db mb2">Cor da Cena:</label>
+                    <div id="colorPicker" class="flex flex-wrap">
+                        <!-- Colors will be added here dynamically -->
+                    </div>
+                </div>
+                <button type="submit" class="bg-green white bn pa2 br2 pointer">Adicionar Cena</button>
+            </form>
+        </section>
+
+        <!-- List of scenes -->
+        <section class="bg-white pa3 br2 shadow-1">
+            <div class="flex justify-between items-center mb3">
+                <h2 class="mt0">Cenas</h2>
+                <div class="flex">
+                    <button id="exportJson" class="bg-blue white bn pa2 br2 pointer mr2">Exportar JSON</button>
+                    <label for="importJson" class="bg-blue white bn pa2 br2 pointer pointer">
+                        Importar JSON
+                        <input type="file" id="importJson" accept=".json" class="dn">
+                    </label>
+                </div>
+            </div>
+            <div id="scenesList" class="flex flex-column">
+                <!-- Scenes will be added here dynamically -->
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-dark-gray white pa3 tc">
+        <p class="ma0">&copy; 2024 Script Maker</p>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html> 
