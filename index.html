@@ -6,56 +6,99 @@
     <title>Script Maker</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="https://unpkg.com/tachyons@4.12.0/css/tachyons.min.css"/>
+    <style>
+        html,
+        body {
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+    </style>
 </head>
 <body class="bg-near-white">
-    <header class="bg-green white pa3">
+    <header class="bg-green white pa2">
         <h1 class="ma0">Script Maker</h1>
     </header>
 
-    <main class="mw8 center pa3">
-        <!-- Form to add new scenes -->
-        <section class="bg-white pa3 br2 shadow-1 mb4">
-            <h2 class="mt0 mb3">Adicionar Nova Cena</h2>
+    <main class="flex">
+        <!-- Sidebar -->
+        <aside class="bg-white pa2 br b--light-gray" style="width: 300px;">
+            <!-- Tempo total estimado -->
+            <div class="mb3 pb3 bb b--light-gray">
+                <h2 class="mt0 mb2 f5">Tempo Total Estimado</h2>
+                <div class="bg-near-white pa2 br2">
+                    <span id="totalTime" class="f4 b">0:00</span>
+                </div>
+                <h2 class="mt3 mb2 f5">Total de Cenas</h2>
+                <div class="bg-near-white pa2 br2">
+                    <span id="totalScenes" class="f4 b">0</span>
+                </div>
+            </div>
+
             <form id="addSceneForm" class="flex flex-column">
-                <div class="mb3">
-                    <label for="sceneName" class="db mb2">Nome da Cena:</label>
-                    <input type="text" id="sceneName" class="w-100 pa2 br2 ba" required>
+                <h2 class="mt0 mb2 f5">Nova Cena</h2>
+                <div class="mb2">
+                    <label for="sceneName" class="db mb1 f6">Nome:</label>
+                    <input type="text" id="sceneName" class="w-100 pa1 br2 ba" required>
                 </div>
-                <div class="mb3">
-                    <label for="sceneText" class="db mb2">Texto da Cena:</label>
-                    <textarea id="sceneText" class="w-100 pa2 br2 ba" rows="4" required></textarea>
+                <div class="mb2">
+                    <label for="sceneText" class="db mb1 f6">Texto:</label>
+                    <textarea id="sceneText" class="w-100 pa1 br2 ba" rows="4" required></textarea>
                 </div>
-                <div class="mb3">
-                    <label class="db mb2">Cor da Cena:</label>
+                <div class="mb2">
+                    <label class="db mb1 f6">Cor:</label>
                     <div id="colorPicker" class="flex flex-wrap">
                         <!-- Colors will be added here dynamically -->
                     </div>
                 </div>
-                <button type="submit" class="bg-green white bn pa2 br2 pointer">Adicionar Cena</button>
+                <button type="submit" class="bg-green white bn pa1 br2 pointer">Adicionar</button>
             </form>
-        </section>
 
-        <!-- List of scenes -->
-        <section class="bg-white pa3 br2 shadow-1">
-            <div class="flex justify-between items-center mb3">
-                <h2 class="mt0">Cenas</h2>
-                <div class="flex">
-                    <button id="exportJson" class="bg-blue white bn pa2 br2 pointer mr2">Exportar JSON</button>
-                    <label for="importJson" class="bg-blue white bn pa2 br2 pointer pointer">
-                        Importar JSON
+            <div class="mt3 pt3 bt b--light-gray">
+                <h2 class="mt0 mb2 f5">Arquivo</h2>
+                <div class="flex flex-column">
+                    <button id="exportJson" class="bg-blue white bn pa1 br2 pointer mb2 text-left">📤 Exportar JSON</button>
+                    <label for="importJson" class="bg-blue white bn pa1 br2 pointer pointer text-center">
+                        📥 Importar JSON
                         <input type="file" id="importJson" accept=".json" class="dn">
                     </label>
                 </div>
             </div>
+        </aside>
+        
+        <!-- Main content -->
+        <section class="flex-auto pa2 overflow-auto">
             <div id="scenesList" class="flex flex-column">
                 <!-- Scenes will be added here dynamically -->
             </div>
         </section>
     </main>
 
-    <footer class="bg-dark-gray white pa3 tc">
-        <p class="ma0">&copy; 2024 Script Maker</p>
-    </footer>
+    <!-- Template para cena -->
+    <template id="sceneTemplate">
+        <div class="scene-item ba b--black-10 br2 pa2 mb2 bg-near-white flex items-center pointer">
+            <!-- Coluna de controles -->
+            <div class="controls-column flex items-center mr2">
+                <div class="color-dot mr2"
+                    style="width: 24px; height: 24px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                </div>
+                <div class="flex items-center">
+                    <button class="move-up bn bg-blue white pa1 br2 pointer mr1">↑</button>
+                    <button class="move-down bn bg-blue white pa1 br2 pointer mr1">↓</button>
+                    <button class="delete-scene bn bg-red white pa1 br2 pointer mr2">×</button>
+                    <label class="flex items-center">
+                        <input type="checkbox" class="mr1">
+                    </label>
+                </div>
+            </div>
+            <!-- Coluna de conteúdo -->
+            <div class="content-column flex-auto">
+                <h3 class="scene-name ma0 mb1 f5"></h3>
+                <p class="scene-text ma0 f6"></p>
+            </div>
+        </div>
+    </template>
 
     <script src="js/main.js"></script>
 </body>

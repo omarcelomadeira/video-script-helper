@@ -3,12 +3,28 @@ const ScriptMaker = (() => {
     // Private variables
     let scenes = [];
     let selectedColor = null;
+    let editingIndex = -1;
 
-    // Available colors for scenes
+    // Available colors for scenes with their respective emojis
     const availableColors = [
-        'red', 'blue', 'green', 'yellow', 'purple', 'orange', 
-        'pink', 'brown', 'gray', 'black', 'white', 'cyan',
-        'magenta', 'lime', 'olive', 'navy', 'teal', 'maroon'
+        { color: 'red', emoji: '😡' },
+        { color: 'blue', emoji: '😄' },
+        { color: 'green', emoji: '😀' },
+        { color: 'yellow', emoji: '🙂' },
+        { color: 'purple', emoji: '😊' },
+        { color: 'orange', emoji: '🤩' },
+        { color: 'pink', emoji: '😍' },
+        { color: 'brown', emoji: '💩' },
+        { color: 'gray', emoji: '☠️' },
+        { color: 'black', emoji: '🥶' },
+        { color: 'white', emoji: '🤡' },
+        { color: 'cyan', emoji: '👀' },
+        { color: 'magenta', emoji: '👹' },
+        { color: 'lime', emoji: '😎' },
+        { color: 'olive', emoji: '😬' },
+        { color: 'navy', emoji: '🙄' },
+        { color: 'teal', emoji: '👍' },
+        { color: 'maroon', emoji: '✍️' }
     ];
 
     // Scene object structure
@@ -16,7 +32,7 @@ const ScriptMaker = (() => {
         isRecorded: false,
         name: name,
         text: text,
-        color: color || availableColors[Math.floor(Math.random() * availableColors.length)]
+        color: color || availableColors[Math.floor(Math.random() * availableColors.length)].color
     });
 
     // UI Elements
@@ -27,31 +43,88 @@ const ScriptMaker = (() => {
         colorPicker: document.getElementById('colorPicker'),
         scenesList: document.getElementById('scenesList'),
         exportButton: document.getElementById('exportJson'),
-        importInput: document.getElementById('importJson')
+        importInput: document.getElementById('importJson'),
+        sceneTemplate: document.getElementById('sceneTemplate'),
+        totalTime: document.getElementById('totalTime'),
+        totalScenes: document.getElementById('totalScenes')
+    };
+
+    // Calculate estimated time for a text (in seconds)
+    const calculateEstimatedTime = (text) => {
+        const characters = text.length;
+        const seconds = Math.ceil(characters * 0.058);
+        return seconds;
+    };
+
+    // Format time in MM:SS format
+    const formatTime = (totalSeconds) => {
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    };
+
+    // Update total time display
+    const updateTotalTime = () => {
+        const totalSeconds = scenes.reduce((total, scene) => {
+            return total + calculateEstimatedTime(scene.text);
+        }, 0);
+        elements.totalTime.textContent = formatTime(totalSeconds);
+        elements.totalScenes.textContent = scenes.length;
+    };
+
+    // Save scenes to localStorage
+    const saveToLocalStorage = () => {
+        try {
+            localStorage.setItem('scriptMakerScenes', JSON.stringify(scenes));
+            console.log('Cenas salvas com sucesso no localStorage');
+        } catch (error) {
+            console.error('Erro ao salvar no localStorage:', error);
+        }
+    };
+
+    // Load scenes from localStorage
+    const loadFromLocalStorage = () => {
+        try {
+            const savedScenes = localStorage.getItem('scriptMakerScenes');
+            if (savedScenes) {
+                scenes = JSON.parse(savedScenes);
+                renderScenes();
+                updateTotalTime();
+                console.log('Cenas carregadas com sucesso do localStorage');
+            }
+        } catch (error) {
+            console.error('Erro ao carregar do localStorage:', error);
+        }
     };
 
     // Create color picker
     const createColorPicker = () => {
         elements.colorPicker.innerHTML = '';
-        availableColors.forEach(color => {
+        availableColors.forEach(({ color, emoji }) => {
             const colorDiv = document.createElement('div');
             colorDiv.className = 'color-option ma1 pointer';
             colorDiv.style.cssText = `
                 width: 24px;
                 height: 24px;
-                border-radius: 50%;
-                background-color: ${color};
-                border: 2px solid transparent;
                 cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 24px;
+                filter: grayscale(100%);
+                transition: transform 0.2s;
             `;
+            colorDiv.textContent = emoji;
             
             colorDiv.addEventListener('click', () => {
                 // Remove selected class from all colors
                 document.querySelectorAll('.color-option').forEach(opt => {
-                    opt.style.border = '2px solid transparent';
+                    opt.style.filter = 'grayscale(100%)';
+                    opt.style.transform = 'scale(1)';
                 });
                 // Add selected class to clicked color
-                colorDiv.style.border = '2px solid #000';
+                colorDiv.style.filter = 'none';
+                colorDiv.style.transform = 'scale(1.2)';
                 selectedColor = color;
             });
 
@@ -59,52 +132,125 @@ const ScriptMaker = (() => {
         });
     };
 
+    // Set form to edit mode
+    const setEditMode = (index) => {
+        const scene = scenes[index];
+        elements.nameInput.value = scene.name;
+        elements.textInput.value = scene.text;
+        selectedColor = scene.color;
+        
+        // Update color picker selection
+        document.querySelectorAll('.color-option').forEach((opt, i) => {
+            if (availableColors[i].color === scene.color) {
+                opt.style.filter = 'none';
+                opt.style.transform = 'scale(1.2)';
+            } else {
+                opt.style.filter = 'grayscale(100%)';
+                opt.style.transform = 'scale(1)';
+            }
+        });
+
+        // Change form button text
+        const submitButton = elements.form.querySelector('button[type="submit"]');
+        submitButton.textContent = 'Salvar';
+        submitButton.classList.remove('bg-green');
+        submitButton.classList.add('bg-blue');
+
+        editingIndex = index;
+    };
+
+    // Reset form to add mode
+    const resetForm = () => {
+        elements.nameInput.value = '';
+        elements.textInput.value = '';
+        selectedColor = null;
+        
+        // Reset color picker selection
+        document.querySelectorAll('.color-option').forEach(opt => {
+            opt.style.filter = 'grayscale(100%)';
+            opt.style.transform = 'scale(1)';
+        });
+
+        // Reset form button
+        const submitButton = elements.form.querySelector('button[type="submit"]');
+        submitButton.textContent = 'Adicionar';
+        submitButton.classList.remove('bg-blue');
+        submitButton.classList.add('bg-green');
+
+        editingIndex = -1;
+    };
+
     // Create scene element
     const createSceneElement = (scene, index) => {
-        const sceneDiv = document.createElement('div');
-        sceneDiv.className = 'ba br2 pa3 mb3 bg-near-white';
-        sceneDiv.innerHTML = `
-            <div class="flex justify-between items-center mb2">
-                <div class="flex items-center">
-                    <div class="color-dot mr2" style="background-color: ${scene.color}; width: 12px; height: 12px; border-radius: 50%; border: 1px solid #ccc;"></div>
-                    <h3 class="ma0">${scene.name}</h3>
-                </div>
-                <div class="flex">
-                    <button class="move-up bn bg-blue white pa2 br2 pointer mr2" ${index === 0 ? 'disabled' : ''}>↑</button>
-                    <button class="move-down bn bg-blue white pa2 br2 pointer mr2" ${index === scenes.length - 1 ? 'disabled' : ''}>↓</button>
-                    <button class="delete-scene bn bg-red white pa2 br2 pointer">×</button>
-                </div>
-            </div>
-            <p class="ma0">${scene.text}</p>
-            <div class="mt2">
-                <label class="flex items-center">
-                    <input type="checkbox" class="mr2" ${scene.isRecorded ? 'checked' : ''}>
-                    Gravado
-                </label>
-            </div>
-        `;
+        // Clone o template
+        const sceneDiv = elements.sceneTemplate.content.cloneNode(true).querySelector('.scene-item');
+        
+        // Configura os elementos
+        const colorDot = sceneDiv.querySelector('.color-dot');
+        const sceneName = sceneDiv.querySelector('.scene-name');
+        const sceneText = sceneDiv.querySelector('.scene-text');
+        const moveUpBtn = sceneDiv.querySelector('.move-up');
+        const moveDownBtn = sceneDiv.querySelector('.move-down');
+        const deleteBtn = sceneDiv.querySelector('.delete-scene');
+        const checkbox = sceneDiv.querySelector('input[type="checkbox"]');
 
-        // Add event listeners
-        sceneDiv.querySelector('.move-up').addEventListener('click', () => {
+        // Define os valores
+        const colorInfo = availableColors.find(c => c.color === scene.color);
+        colorDot.style.borderColor = scene.color;
+        colorDot.textContent = colorInfo ? colorInfo.emoji : '';
+        sceneName.textContent = scene.name;
+        sceneText.textContent = scene.text;
+        checkbox.checked = scene.isRecorded;
+
+        // Desabilita botões de movimento quando necessário
+        if (index === 0) moveUpBtn.disabled = true;
+        if (index === scenes.length - 1) moveDownBtn.disabled = true;
+
+        // Adiciona event listeners
+        sceneDiv.addEventListener('click', (e) => {
+            // Don't trigger edit if clicking on controls
+            if (!e.target.closest('.move-up') && 
+                !e.target.closest('.move-down') && 
+                !e.target.closest('.delete-scene') &&
+                !e.target.closest('input[type="checkbox"]')) {
+                setEditMode(index);
+            }
+        });
+
+        moveUpBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
             if (ScriptMaker.moveSceneUp(index)) {
                 renderScenes();
+                saveToLocalStorage();
+                updateTotalTime();
             }
         });
 
-        sceneDiv.querySelector('.move-down').addEventListener('click', () => {
+        moveDownBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
             if (ScriptMaker.moveSceneDown(index)) {
                 renderScenes();
+                saveToLocalStorage();
+                updateTotalTime();
             }
         });
 
-        sceneDiv.querySelector('.delete-scene').addEventListener('click', () => {
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
             ScriptMaker.removeScene(index);
             renderScenes();
+            saveToLocalStorage();
+            updateTotalTime();
+            if (editingIndex === index) {
+                resetForm();
+            }
         });
 
-        sceneDiv.querySelector('input[type="checkbox"]').addEventListener('change', (e) => {
+        checkbox.addEventListener('change', (e) => {
+            e.stopPropagation();
             if (e.target.checked) {
                 ScriptMaker.markAsRecorded(index);
+                saveToLocalStorage();
             }
         });
 
@@ -143,9 +289,11 @@ const ScriptMaker = (() => {
                     // Ensure all imported scenes have a color
                     scenes = importedScenes.map(scene => ({
                         ...scene,
-                        color: scene.color || availableColors[Math.floor(Math.random() * availableColors.length)]
+                        color: scene.color || availableColors[Math.floor(Math.random() * availableColors.length)].color
                     }));
                     renderScenes();
+                    saveToLocalStorage();
+                    updateTotalTime();
                     alert('Script importado com sucesso!');
                 } else {
                     throw new Error('Formato inválido');
@@ -168,16 +316,20 @@ const ScriptMaker = (() => {
             const name = elements.nameInput.value;
             const text = elements.textInput.value;
             
-            ScriptMaker.addScene(name, text, selectedColor);
-            renderScenes();
+            if (editingIndex >= 0) {
+                // Update existing scene
+                scenes[editingIndex].name = name;
+                scenes[editingIndex].text = text;
+                scenes[editingIndex].color = selectedColor || scenes[editingIndex].color;
+                resetForm();
+            } else {
+                // Add new scene
+                ScriptMaker.addScene(name, text, selectedColor);
+            }
             
-            elements.nameInput.value = '';
-            elements.textInput.value = '';
-            selectedColor = null;
-            // Reset color picker selection
-            document.querySelectorAll('.color-option').forEach(opt => {
-                opt.style.border = '2px solid transparent';
-            });
+            renderScenes();
+            saveToLocalStorage();
+            updateTotalTime();
         });
 
         elements.exportButton.addEventListener('click', exportToJson);
@@ -248,7 +400,9 @@ const ScriptMaker = (() => {
         // Initialize the application
         init: () => {
             initUI();
+            loadFromLocalStorage();
             renderScenes();
+            updateTotalTime();
         }
     };
 })();
